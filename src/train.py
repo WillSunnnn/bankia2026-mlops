@@ -55,28 +55,41 @@ def train_and_log(experiment_name, model, params, run_name):
 
         return model, metrics
 
-# ── Decision Tree ─────────────────────────────────────────────────────────────
+# ── Sélection automatique du meilleur modèle ─────────────────────────────────
+tous_les_modeles = {}
+
 params1 = {"max_depth": 5, "min_samples_split": 20, "class_weight": "balanced"}
-train_and_log("DecisionTree_LoanDefault", DecisionTreeClassifier(**params1, random_state=42), params1, "DT_depth5")
+model, metrics = train_and_log("DecisionTree_LoanDefault", DecisionTreeClassifier(**params1, random_state=42), params1, "DT_depth5")
+tous_les_modeles["DT_depth5"] = (model, metrics)
 
 params2 = {"max_depth": 10, "min_samples_split": 50, "class_weight": "balanced"}
-train_and_log("DecisionTree_LoanDefault", DecisionTreeClassifier(**params2, random_state=42), params2, "DT_depth10")
+model, metrics = train_and_log("DecisionTree_LoanDefault", DecisionTreeClassifier(**params2, random_state=42), params2, "DT_depth10")
+tous_les_modeles["DT_depth10"] = (model, metrics)
 
-# ── Logistic Regression ───────────────────────────────────────────────────────
 params3 = {"C": 0.1, "max_iter": 1000, "class_weight": "balanced"}
-train_and_log("LogisticRegression_LoanDefault", LogisticRegression(**params3, random_state=42), params3, "LR_C0.1")
+model, metrics = train_and_log("LogisticRegression_LoanDefault", LogisticRegression(**params3, random_state=42), params3, "LR_C0.1")
+tous_les_modeles["LR_C0.1"] = (model, metrics)
 
 params4 = {"C": 1.0, "max_iter": 1000, "class_weight": "balanced"}
-train_and_log("LogisticRegression_LoanDefault", LogisticRegression(**params4, random_state=42), params4, "LR_C1.0")
+model, metrics = train_and_log("LogisticRegression_LoanDefault", LogisticRegression(**params4, random_state=42), params4, "LR_C1.0")
+tous_les_modeles["LR_C1.0"] = (model, metrics)
 
-# ── Random Forest ─────────────────────────────────────────────────────────────
 params5 = {"n_estimators": 100, "max_depth": 8, "class_weight": "balanced"}
-train_and_log("RandomForest_LoanDefault", RandomForestClassifier(**params5, random_state=42), params5, "RF_100trees")
+model, metrics = train_and_log("RandomForest_LoanDefault", RandomForestClassifier(**params5, random_state=42), params5, "RF_100trees")
+tous_les_modeles["RF_100trees"] = (model, metrics)
 
 params6 = {"n_estimators": 200, "max_depth": 12, "class_weight": "balanced"}
-best_model, _ = train_and_log("RandomForest_LoanDefault", RandomForestClassifier(**params6, random_state=42), params6, "RF_200trees")
+model, metrics = train_and_log("RandomForest_LoanDefault", RandomForestClassifier(**params6, random_state=42), params6, "RF_200trees")
+tous_les_modeles["RF_200trees"] = (model, metrics)
 
-# ── Sauvegarde du meilleur modèle ─────────────────────────────────────────────
+# Sélection basée sur le ROC-AUC
+best_name = max(tous_les_modeles, key=lambda k: tous_les_modeles[k][1]["roc_auc"])
+best_model = tous_les_modeles[best_name][0]
+
+print(f"\n🏆 Meilleur modèle : {best_name}")
+print(f"   ROC-AUC : {tous_les_modeles[best_name][1]['roc_auc']:.4f}")
+
+# ── Sauvegarde ────────────────────────────────────────────────────────────────
 os.makedirs("models", exist_ok=True)
 joblib.dump(best_model, "models/best_model.pkl")
 joblib.dump(scaler, "models/scaler.pkl")
