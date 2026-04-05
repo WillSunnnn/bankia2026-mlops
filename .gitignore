@@ -1,0 +1,24 @@
+# Environnement virtuel
+venv/
+
+# MLflow
+mlruns/
+mlflow.db
+
+# Modèles (fichiers binaires lourds)
+models/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Jupyter
+.ipynb_checkpoints/
+
+# VS Code
+.vscode/
+
+# Windows
+Thumbs.db
+.DS_Store
